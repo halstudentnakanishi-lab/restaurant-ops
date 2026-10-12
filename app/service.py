@@ -4,6 +4,7 @@ import hashlib
 import io
 import re
 import sqlite3
+from contextlib import contextmanager
 from datetime import date, datetime, timezone
 from pathlib import Path
 
@@ -17,11 +18,16 @@ class ImportProblem(Exception):
         self.errors = errors
 
 
+@contextmanager
 def connect(path):
     db = sqlite3.connect(path, timeout=10)
     db.row_factory = sqlite3.Row
     db.execute('PRAGMA foreign_keys=ON')
-    return db
+    try:
+        with db:
+            yield db
+    finally:
+        db.close()
 
 
 def initialize(path):
