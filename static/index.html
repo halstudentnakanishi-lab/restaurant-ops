@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="ja">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Restaurant Ops | 売上と日報を、ひとつに。</title>
+    <link rel="stylesheet" href="/static/style.css" />
+    <script src="/static/app.js" defer></script>
+  </head>
+  <body>
+    <aside class="sidebar">
+      <a class="brand" href="/" aria-label="Restaurant Ops ホーム"
+        ><span class="brand-mark">R.</span
+        ><span
+          >restaurant<span class="brand-sub">OPS / DAILY WORKSPACE</span></span
+        ></a
+      >
+      <div class="workspace">
+        <span class="workspace-icon">喫</span>
+        <div>喫茶 こもれび<small>架空の店舗 / ポートフォリオ</small></div>
+      </div>
+      <p class="nav-label">WORKSPACE</p>
+      <nav aria-label="メインメニュー">
+        <button data-view="dashboard" class="nav-button active">
+          <span>▦</span>売上ダッシュボード
+        </button>
+        <button data-view="imports" class="nav-button">
+          <span>↥</span>CSV取り込み
+        </button>
+        <button data-view="reports" class="nav-button">
+          <span>▤</span>営業日報
+        </button>
+        <button data-view="history" class="nav-button">
+          <span>◷</span>処理履歴
+        </button>
+      </nav>
+      <div class="side-note">
+        <span class="live-dot"></span> LOCAL WORKSPACE
+        <p>データはこのPCに保存。<br />外部への自動送信はありません。</p>
+      </div>
+      <footer class="side-footer">Restaurant Ops <span>v1.0</span></footer>
+    </aside>
+    <main>
+      <header class="topbar">
+        <span
+          >WORKSPACE <span class="slash">/</span>
+          <span id="breadcrumb">売上ダッシュボード</span></span
+        ><span class="demo-label">DEMO DATA ONLY</span>
+      </header>
+      <div class="page-content">
+        <div id="notice" role="status" aria-live="polite" hidden></div>
+        <section id="dashboard" class="view">
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">DAILY OVERVIEW</p>
+              <h1>売上を、ひと目で。</h1>
+              <p class="subtitle">
+                集計から日報まで。閉店後の作業を、もう少しシンプルに。
+              </p>
+            </div>
+            <button class="primary" data-go="imports">＋ CSVを取り込む</button>
+          </div>
+          <form id="filter-form" class="filter">
+            <span>集計期間</span
+            ><label class="sr-only" for="start">開始日</label
+            ><input id="start" type="date" /><span>—</span
+            ><label class="sr-only" for="end">終了日</label
+            ><input id="end" type="date" /><button
+              class="secondary"
+              type="submit"
+            >
+              適用</button
+            ><button class="text-button" type="button" id="reset-filter">
+              すべての期間
+            </button>
+          </form>
+          <div class="metrics">
+            <article class="metric feature">
+              <p>売上合計 <span>JPY</span></p>
+              <div id="revenue" class="metric-value">¥0</div>
+              <small>取り込み済みデータの合計</small>
+            </article>
+            <article class="metric">
+              <p>販売点数 <span>ITEMS</span></p>
+              <div class="metric-value">
+                <span id="quantity">0</span><small>点</small>
+              </div>
+              <small>商品の販売数量</small>
+            </article>
+            <article class="metric">
+              <p>集計日数 <span>DAYS</span></p>
+              <div class="metric-value">
+                <span id="day-count">0</span><small>日</small>
+              </div>
+              <small>売上データのある営業日</small>
+            </article>
+          </div>
+          <div class="dashboard-grid">
+            <article class="card">
+              <div class="card-heading">
+                <div>
+                  <h2>日別売上</h2>
+                  <p>営業日ごとの売上の動き</p>
+                </div>
+                <span class="tag">SALES</span>
+              </div>
+              <div id="daily-chart" class="daily-chart"></div>
+            </article>
+            <article class="card">
+              <div class="card-heading">
+                <div>
+                  <h2>商品別売上</h2>
+                  <p>売上金額の高い順</p>
+                </div>
+                <a
+                  id="export-products"
+                  class="text-link"
+                  href="/api/exports/products.csv"
+                  >CSV出力 ↗</a
+                >
+              </div>
+              <div class="table-wrap">
+                <table>
+                  <thead>
+                    <tr>
+                      <th>商品</th>
+                      <th class="number">点数</th>
+                      <th class="number">売上</th>
+                    </tr>
+                  </thead>
+                  <tbody id="products"></tbody>
+                </table>
+              </div>
+            </article>
+          </div>
+          <div class="workflow-card">
+            <div>
+              <span class="eyebrow">NEXT STEP</span>
+              <h2>一日のまとめを、日報に。</h2>
+              <p>
+                売上から下書きを作成。気づきや引き継ぎを添えて確定できます。
+              </p>
+            </div>
+            <button class="secondary" data-go="reports">
+              営業日報を開く →
+            </button>
+          </div>
+        </section>
+        <section id="imports" class="view" hidden>
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">IMPORT SALES</p>
+              <h1>集計は、CSVから。</h1>
+              <p class="subtitle">
+                ファイルを検証し、問題がない場合だけ全行を保存します。
+              </p>
+            </div>
+            <a href="/api/sample" class="secondary"
+              >サンプルCSVをダウンロード ↓</a
+            >
+          </div>
+          <div class="import-grid">
+            <article class="card upload-card">
+              <span class="upload-icon">↥</span>
+              <h2>売上CSVを選択</h2>
+              <p>UTF-8 / 2MB以下 / 最大10,000行</p>
+              <form id="upload-form">
+                <label class="sr-only" for="csv-file">取り込むCSVファイル</label
+                ><input
+                  type="file"
+                  id="csv-file"
+                  accept=".csv,text/csv"
+                  required
+                /><button class="primary" type="submit">
+                  検証して取り込む
+                </button>
+              </form>
+              <div id="import-result" aria-live="polite"></div>
+            </article>
+            <article class="card">
+              <p class="eyebrow">FIRST VISIT?</p>
+              <h2>まずは、架空の売上で。</h2>
+              <p class="body-copy">
+                喫茶店の7日分のサンプルデータで、集計から日報の確定まで試せます。
+              </p>
+              <button id="sample-import" class="secondary">
+                サンプルデータを取り込む
+              </button>
+              <hr />
+              <h3>取り込み時のチェック</h3>
+              <ul class="check-list">
+                <li>必須項目・日付・数値の形式</li>
+                <li>ファイルと売上IDの重複</li>
+                <li>確定済みの日報との整合性</li>
+              </ul>
+            </article>
+          </div>
+          <article class="card format-card">
+            <h2>CSVの形式</h2>
+            <p>
+              金額は税込・円単位の整数を想定しています。返品・値引きはこの版では扱いません。
+            </p>
+            <div class="table-wrap">
+              <table>
+                <thead>
+                  <tr>
+                    <th>sale_id</th>
+                    <th>sold_on</th>
+                    <th>product</th>
+                    <th>quantity</th>
+                    <th>unit_price</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>S001</td>
+                    <td>2026-10-01</td>
+                    <td>ブレンドコーヒー</td>
+                    <td>12</td>
+                    <td>450</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+            <p class="muted">
+              ヘッダー名と順序は固定です。売上IDは各行で異なる値にしてください。
+            </p>
+          </article>
+        </section>
+        <section id="reports" class="view" hidden>
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">DAILY REPORT</p>
+              <h1>数字に、気づきを添える。</h1>
+              <p class="subtitle">
+                集計値から定型の下書きを作成します。内容を確認して確定してください。
+              </p>
+            </div>
+          </div>
+          <div class="report-grid">
+            <article class="card">
+              <h2>営業日を選択</h2>
+              <form id="draft-form">
+                <label for="report-date">売上データのある日</label
+                ><select id="report-date" required></select
+                ><button class="primary" type="submit">
+                  日報を開く / 下書きを作成
+                </button>
+              </form>
+              <h3 class="report-list-heading">作成済みの日報</h3>
+              <div id="report-list"></div>
+            </article>
+            <article class="card report-editor">
+              <div class="card-heading">
+                <h2 id="report-title">日報プレビュー</h2>
+                <span id="report-status" class="tag">未選択</span>
+              </div>
+              <label class="sr-only" for="report-content">日報本文</label
+              ><textarea
+                id="report-content"
+                placeholder="営業日を選択すると、ここに日報が表示されます。"
+                disabled
+              ></textarea>
+              <p id="report-help" class="muted">
+                確定後は編集・同日の売上追加ができなくなります。
+              </p>
+              <div class="report-actions">
+                <button id="save-report" class="secondary" disabled>
+                  下書き保存</button
+                ><button id="confirm-report" class="primary" disabled>
+                  内容を確認して確定</button
+                ><button id="download-report" class="secondary" disabled>
+                  JSONを保存 ↓
+                </button>
+              </div>
+            </article>
+          </div>
+        </section>
+        <section id="history" class="view" hidden>
+          <div class="page-heading">
+            <div>
+              <p class="eyebrow">ACTIVITY LOG</p>
+              <h1>処理の結果を、残す。</h1>
+              <p class="subtitle">
+                取り込みの成功・失敗とその理由を確認できます。直近100件を表示。
+              </p>
+            </div>
+            <button id="refresh-history" class="secondary">更新 ↻</button>
+          </div>
+          <article class="card"><div id="history-list"></div></article>
+        </section>
+        <footer class="page-footer">
+          架空店舗の業務改善デモ <span>Python / FastAPI / SQLite</span>
+        </footer>
+      </div>
+    </main>
+    <dialog id="confirmation">
+      <h2 id="confirmation-title">確認</h2>
+      <p id="confirmation-message"></p>
+      <div class="report-actions">
+        <button id="confirmation-cancel" class="secondary">キャンセル</button
+        ><button id="confirmation-accept" class="primary">実行する</button>
+      </div>
+    </dialog>
+  </body>
+</html>
