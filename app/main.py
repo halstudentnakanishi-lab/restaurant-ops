@@ -5,8 +5,8 @@ import os
 from datetime import date
 from pathlib import Path
 
-from fastapi import FastAPI, File, HTTPException, UploadFile
-from fastapi.responses import FileResponse, Response
+from fastapi import FastAPI, File, HTTPException, UploadFile, Query
+from fastapi.responses import FileResponse, Response, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 from starlette.middleware.trustedhost import TrustedHostMiddleware
@@ -45,6 +45,10 @@ def create_app(db_path=None):
     def home():
         return FileResponse(ROOT / 'static' / 'index.html')
 
+    @app.get('/portfolio')
+    def portfolio():
+        return RedirectResponse('/static/portfolio.html')
+
     @app.get('/api/health')
     def health():
         return {'status': 'ok'}
@@ -70,14 +74,14 @@ def create_app(db_path=None):
             return [dict(r) for r in db.execute('SELECT id,filename,status,row_count,message,created_at FROM imports ORDER BY id DESC LIMIT 100')]
 
     @app.get('/api/summary')
-    def totals(start: date | None = None, end: date | None = None):
+    def totals(start: date | None = None, end: date | None = None, product: str = Query(default='', max_length=100)):
         if start and end and start > end:
             raise HTTPException(422, '開始日は終了日以前にしてください。')
-        return summary(path, str(start) if start else None, str(end) if end else None)
+        return summary(path, str(start) if start else None, str(end) if end else None, product)
 
     @app.get('/api/exports/products.csv')
-    def export(start: date | None = None, end: date | None = None):
-        data = totals(start, end)
+    def export(start: date | None = None, end: date | None = None, product: str = Query(default='', max_length=100)):
+        data = totals(start, end, product)
         output = io.StringIO(newline='')
         writer = csv.writer(output)
         writer.writerow(['商品', '販売点数', '売上金額（円）'])

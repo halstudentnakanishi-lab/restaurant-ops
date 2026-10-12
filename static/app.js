@@ -107,7 +107,7 @@ async function loadDashboard() {
   });
   if (!data.days.length)
     $("daily-chart").append(
-      el("p", "データがありません。CSV取り込みから始めましょう。", "empty"),
+      el("p", query ? "条件に一致する売上はありません。条件を変更してください。" : "データがありません。CSV取り込みから始めましょう。", "empty"),
     );
   $("products").replaceChildren();
   data.products.forEach((p) => {
@@ -121,12 +121,16 @@ async function loadDashboard() {
   });
   if (!data.products.length) {
     const row = el("tr");
-    const cell = el("td", "取り込み後に商品別売上を表示します。", "empty");
+    const cell = el("td", query ? "条件に一致する商品はありません。" : "取り込み後に商品別売上を表示します。", "empty");
     cell.colSpan = 3;
     row.append(cell);
     $("products").append(row);
   }
   $("export-products").href = "/api/exports/products.csv" + query;
+  const active = new URLSearchParams(query);
+  $("filter-summary").textContent = query
+    ? `集計中：${active.get("start") || "開始日なし"} 〜 ${active.get("end") || "終了日なし"} / 商品名：${active.get("product") || "すべて"}（部分一致・大文字小文字を区別）`
+    : "すべての商品・期間を集計しています。";
 }
 $("filter-form").addEventListener("submit", (e) => {
   e.preventDefault();
@@ -135,12 +139,14 @@ $("filter-form").addEventListener("submit", (e) => {
   const params = new URLSearchParams();
   if ($("start").value) params.set("start", $("start").value);
   if ($("end").value) params.set("end", $("end").value);
-  query = "?" + params.toString();
+  if ($("product-filter").value.trim()) params.set("product", $("product-filter").value.trim());
+  query = params.size ? "?" + params.toString() : "";
   guarded(e.submitter, loadDashboard);
 });
 $("reset-filter").addEventListener("click", () => {
   $("start").value = "";
   $("end").value = "";
+  $("product-filter").value = "";
   query = "";
   guarded($("reset-filter"), loadDashboard);
 });

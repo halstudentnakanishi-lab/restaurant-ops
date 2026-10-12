@@ -138,3 +138,32 @@ def test_database_persists_across_app_instances(tmp_path):
         upload(first, 'a,2026-10-01,coffee,1,450\n')
     with TestClient(create_app(path)) as second:
         assert second.get('/api/summary').json()['total']['revenue'] == 450
+
+
+def test_product_search_with_dates_and_export(client):
+    upload(client, 'a,2026-10-01,ホットコーヒー,2,450\nb,2026-10-02,アイスコーヒー,1,500\nc,2026-10-02,ケーキ,3,600\n')
+    params = {'product': ' コーヒー ', 'start': '2026-10-02', 'end': '2026-10-02'}
+    result = client.get('/api/summary', params=params).json()
+    assert result['total'] == {'revenue': 500, 'quantity': 1, 'rows': 1}
+    assert result['products'][0]['product'] == 'アイスコーヒー'
+    rows = list(csv.reader(io.StringIO(client.get('/api/exports/products.csv', params=params).content.decode('utf-8-sig'))))
+    assert rows == [['商品', '販売点数', '売上金額（円）'], ['アイスコーヒー', '1', '500']]
+    assert client.get('/api/summary', params={'product': '該当なし'}).json()['total']['rows'] == 0
+    assert client.get('/api/summary', params={'product': '  '}).json()['total']['rows'] == 3
+    # A dashboard filter must not reduce the full-day report.
+    draft = client.post('/api/reports/2026-10-02/draft').json()
+    assert '2,300円' in draft['content']
+
+
+@pytest.mark.parametrize('keyword', ['%', '_', "' OR 1=1 --"])
+def test_search_metacharacters_are_literal(client, keyword):
+    upload(client, 'a,2026-10-01,coffee,1,450\n')
+    assert client.get('/api/summary', params={'product': keyword}).json()['total']['rows'] == 0
+
+
+def test_product_search_length_and_portfolio(client):
+    for endpoint in ['/api/summary', '/api/exports/products.csv']:
+        assert client.get(endpoint, params={'product': 'a' * 101}).status_code == 422
+    assert client.get('/portfolio').status_code == 200
+    assert 'Restaurant Ops' in client.get('/portfolio').text
+    assert client.get('/static/portfolio.css').status_code == 200

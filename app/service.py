@@ -141,7 +141,7 @@ def import_csv(path, filename, raw):
         raise
 
 
-def summary(path, start=None, end=None):
+def summary(path, start=None, end=None, product=None):
     where, args = [], []
     if start:
         where.append('sold_on >= ?')
@@ -149,6 +149,10 @@ def summary(path, start=None, end=None):
     if end:
         where.append('sold_on <= ?')
         args.append(end)
+    if product and product.strip():
+        # instr treats %, _ and quotes as literal text, not SQL wildcards.
+        where.append('instr(product, ?) > 0')
+        args.append(product.strip())
     clause = ' WHERE ' + ' AND '.join(where) if where else ''
     with connect(path) as db:
         total = dict(db.execute('SELECT COALESCE(SUM(quantity*unit_price),0) revenue, COALESCE(SUM(quantity),0) quantity, COUNT(*) rows FROM sales' + clause, args).fetchone())
