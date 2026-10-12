@@ -107,7 +107,13 @@ async function loadDashboard() {
   });
   if (!data.days.length)
     $("daily-chart").append(
-      el("p", query ? "条件に一致する売上はありません。条件を変更してください。" : "データがありません。CSV取り込みから始めましょう。", "empty"),
+      el(
+        "p",
+        query
+          ? "条件に一致する売上はありません。条件を変更してください。"
+          : "データがありません。CSV取り込みから始めましょう。",
+        "empty",
+      ),
     );
   $("products").replaceChildren();
   data.products.forEach((p) => {
@@ -121,7 +127,13 @@ async function loadDashboard() {
   });
   if (!data.products.length) {
     const row = el("tr");
-    const cell = el("td", query ? "条件に一致する商品はありません。" : "取り込み後に商品別売上を表示します。", "empty");
+    const cell = el(
+      "td",
+      query
+        ? "条件に一致する商品はありません。"
+        : "取り込み後に商品別売上を表示します。",
+      "empty",
+    );
     cell.colSpan = 3;
     row.append(cell);
     $("products").append(row);
@@ -139,7 +151,8 @@ $("filter-form").addEventListener("submit", (e) => {
   const params = new URLSearchParams();
   if ($("start").value) params.set("start", $("start").value);
   if ($("end").value) params.set("end", $("end").value);
-  if ($("product-filter").value.trim()) params.set("product", $("product-filter").value.trim());
+  if ($("product-filter").value.trim())
+    params.set("product", $("product-filter").value.trim());
   query = params.size ? "?" + params.toString() : "";
   guarded(e.submitter, loadDashboard);
 });

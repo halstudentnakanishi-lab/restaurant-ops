@@ -67,17 +67,20 @@
             ><label class="sr-only" for="end">終了日</label
             ><input id="end" type="date" />
             <label for="product-filter">商品名</label>
-            <input id="product-filter" type="search" maxlength="100" placeholder="例：コーヒー" />
-            <button
-              class="secondary"
-              type="submit"
-            >
-              適用</button
+            <input
+              id="product-filter"
+              type="search"
+              maxlength="100"
+              placeholder="例：コーヒー"
+            />
+            <button class="secondary" type="submit">適用</button
             ><button class="text-button" type="button" id="reset-filter">
               条件をリセット
             </button>
           </form>
-          <p id="filter-summary" class="muted" role="status">すべての商品・期間を集計しています。</p>
+          <p id="filter-summary" class="muted" role="status">
+            すべての商品・期間を集計しています。
+          </p>
           <div class="metrics">
             <article class="metric feature">
               <p>売上合計 <span>JPY</span></p>
@@ -308,4 +311,3 @@
     </dialog>
   </body>
 </html>
-
