@@ -46,7 +46,8 @@ API仕様は起動後の `/docs` で確認できます。
 
 作品紹介ページは起動後の <http://127.0.0.1:8000/portfolio> で表示できます。
 `static/portfolio.html` を直接開いて紹介文を読むこともできます（アプリ操作にはサーバーの起動が必要です）。
-GitHubや外部ホスティングへの公開はまだ行っていません。
+ソースコード：https://github.com/halstudentnakanishi-lab/restaurant-ops
+公開Webデモはありません。動作確認にはローカルでの起動が必要です。
 
 ## 3分で試す
 
